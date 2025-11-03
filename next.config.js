@@ -14,6 +14,11 @@ const nextConfig = {
         );
         return config;
     },
+    experimental: {
+        turboTrace: false,
+    },
+
+    output: 'standalone',
 };
 
 module.exports = nextConfig;
