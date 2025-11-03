@@ -14,11 +14,14 @@ const nextConfig = {
         );
         return config;
     },
-    experimental: {
-        turboTrace: false,
-    },
-
     output: 'standalone',
+    experimental: {
+        outputFileTracingIgnores: [
+            '**/.next/**',
+            '**/node_modules/**',
+            '**/mocks/**'
+        ],
+    },
 };
 
 module.exports = nextConfig;

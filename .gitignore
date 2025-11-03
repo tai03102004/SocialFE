@@ -13,6 +13,10 @@
 # Vercel build & deployment
 .vercel
 
+.next
+out
+.vercel
+
 # environment variables
 .env
 .env.local
