@@ -3,12 +3,12 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // Cache configuration
-const CACHE_DURATION = 10000; // 10 seconds
+const CACHE_DURATION = 30000; // 10 seconds
 const cache = new Map<string, { data: any; timestamp: number }>();
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
-  timeout: 10000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -44,17 +44,6 @@ export const healthApi = {
 
     const response = await api.get("/health");
     setCachedData("health", response.data);
-    return response.data;
-  },
-};
-
-export const systemApi = {
-  getStatus: async () => {
-    const cached = getCachedData("system-status");
-    if (cached) return cached;
-
-    const response = await api.get("/system/status");
-    setCachedData("system-status", response.data);
     return response.data;
   },
 };

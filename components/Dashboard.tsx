@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { marketApi, systemApi, tradingApi, blockchainApi } from '@/lib/api'
+import { marketApi, tradingApi, blockchainApi } from '@/lib/api'
 import { TrendingUp, TrendingDown, Activity, Database, Wallet, BarChart3, RefreshCw } from 'lucide-react'
 
 export default function Dashboard() {
@@ -22,16 +22,14 @@ export default function Dashboard() {
     try {
       setLoading(true)
 
-      const [market, system, port, history, blockchain] = await Promise.all([
+      const [market, port, history, blockchain] = await Promise.all([
         marketApi.getStatus().catch(() => null),
-        systemApi.getStatus().catch(() => null),
         tradingApi.getPortfolio().catch(() => null),
         tradingApi.getHistory().catch(() => null),
         blockchainApi.getStatus().catch(() => null),
       ])
 
       if (market?.success) setMarketStatus(market)
-      if (system?.success) setSystemStatus(system.data)
       if (port?.success) setPortfolio(port.portfolio)
       if (history?.success) setTradeHistory(history.history || [])
       if (blockchain?.success) setBlockchainStatus(blockchain)

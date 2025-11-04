@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, TrendingDown, Award, Target, Shield, RefreshCw } from 'lucide-react'
+import { BarChart3, TrendingUp, TrendingDown, Award, Target, Shield, RefreshCw, Brain } from 'lucide-react'
 import { tradingApi } from '@/lib/api'
 
 export default function StatsPage() {
@@ -9,24 +9,25 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
+
   useEffect(() => {
     fetchStats()
-    const interval = setInterval(fetchStats, 30000) // Update every 30s
+    const interval = setInterval(fetchStats, 10000) // Update every 30s
     return () => clearInterval(interval)
   }, [])
 
   const fetchStats = async () => {
-    try {
-      const response = await tradingApi.getStats()
+    // try {
+      const response = await tradingApi.getStats();
       if (response.success) {
         setStats(response.stats)
       }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
+    // } catch (error) {
+    //   console.error('Failed to fetch stats:', error)
+    // } finally {
+    //   setLoading(false)
+    //   setRefreshing(false)
+    // }
   }
 
   const handleRefresh = async () => {

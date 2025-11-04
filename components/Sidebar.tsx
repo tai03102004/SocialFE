@@ -34,7 +34,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
     { id: 'portfolio', icon: Wallet, label: 'Portfolio', path: '/portfolio', color: 'purple' },
     { id: 'history', icon: History, label: 'History', path: '/history', color: 'yellow' },
     { id: 'blockchain', icon: Database, label: 'Blockchain', path: '/blockchain', color: 'indigo' },
-    { id: 'agents', icon: Activity, label: 'AI Agents', path: '/agents', color: 'pink' },
+    { id: 'ai analysis', icon: Activity, label: 'AI Analysis', path: '/ai', color: 'pink' },
     { id: 'dao', icon: Vote, label: 'DAO', path: '/dao', color: 'pink' },
     { id: 'rewards', icon: Sparkles, label: 'Rewards', path: '/rewards', color: 'cyan' },
   ]
