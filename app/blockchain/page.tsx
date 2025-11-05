@@ -20,7 +20,7 @@ export default function BlockchainPage() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 30000) // Refresh every 30s
+    const interval = setInterval(fetchData, 60000) // Refresh every 30s
     return () => clearInterval(interval)
   }, [])
 
@@ -147,20 +147,6 @@ export default function BlockchainPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="web3-card p-4">
           <div className="flex items-center gap-3">
-            {status?.isConnected ? (
-              <CheckCircle className="w-5 h-5 text-green-400" />
-            ) : (
-              <XCircle className="w-5 h-5 text-red-400" />
-            )}
-            <div>
-              <p className="text-sm text-slate-400">Status</p>
-              <p className="font-bold">{status?.isConnected ? 'Connected' : 'Disconnected'}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="web3-card p-4">
-          <div className="flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-cyan-400" />
             <div>
               <p className="text-sm text-slate-400">Total Signals</p>
@@ -282,7 +268,7 @@ export default function BlockchainPage() {
               <button
                 onClick={handleSubmitTestSignal}
                 disabled={executing}
-                className="web3-button w-full disabled:opacity-50"
+                className="web3-button w-full disabled:opacity-50 flex items-center"
               >
                 <Play className="w-4 h-4 mr-2" />
                 {executing ? 'Submitting...' : 'Submit Test Signal'}
@@ -294,7 +280,7 @@ export default function BlockchainPage() {
               <button
                 onClick={handleExecuteTestTrade}
                 disabled={executing}
-                className="web3-button w-full disabled:opacity-50"
+                className="web3-button w-full disabled:opacity-50 flex items-center"
               >
                 <Play className="w-4 h-4 mr-2" />
                 {executing ? 'Executing...' : 'Execute Test Trade'}

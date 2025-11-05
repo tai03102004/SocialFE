@@ -1,30 +1,52 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Wallet, TrendingUp, DollarSign, AlertTriangle, Activity } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, AlertTriangle, Activity, RefreshCw } from 'lucide-react'
 import { tradingApi } from '@/lib/api'
 
 export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState<any>(null)
+  const [balance, setBalance] = useState<any>(null) // ✅ Add balance state
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    fetchPortfolio()
-    const interval = setInterval(fetchPortfolio, 15000) // Update every 15s
+    fetchPortfolioData()
+    const interval = setInterval(fetchPortfolioData, 15000) // Update every 15s
     return () => clearInterval(interval)
   }, [])
 
-  const fetchPortfolio = async () => {
+  // ✅ Enhanced fetch function
+  const fetchPortfolioData = async () => {
     try {
-      const response = await tradingApi.getPortfolio()
-      if (response.success) {
-        setPortfolio(response.portfolio)
+      setLoading(true)
+      
+      const [portfolioResponse, balanceResponse] = await Promise.all([
+        tradingApi.getPortfolio().catch(err => ({ success: false, error: err.message })),
+        tradingApi.getBalance().catch(err => ({ success: false, error: err.message }))
+      ])
+
+      console.log('💼 Portfolio Response:', portfolioResponse)
+      console.log('💰 Balance Response:', balanceResponse)
+
+      if (portfolioResponse.success) {
+        setPortfolio(portfolioResponse.portfolio)
+      }
+
+      if (balanceResponse.success) {
+        setBalance(balanceResponse.balance)
       }
     } catch (error) {
       console.error('Portfolio fetch error:', error)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await fetchPortfolioData()
   }
 
   const formatDuration = (minutes: number) => {
@@ -40,9 +62,18 @@ export default function PortfolioPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-blue-400 mb-1">Portfolio</h1>
-            <p className="text-slate-400">Your trading positions and performance</p>
+            <p className="text-slate-400">Your trading positions and wallet balance</p>
           </div>
-          <Wallet className="w-8 h-8 text-blue-400" />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 rounded-lg"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <Wallet className="w-8 h-8 text-blue-400" />
+          </div>
         </div>
       </div>
 
@@ -52,6 +83,51 @@ export default function PortfolioPage() {
         </div>
       ) : (
         <>
+          {/* ✅ Binance Wallet Balance */}
+          {balance && (
+            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-yellow-400" />
+                Binance Wallet Balance
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(balance).map(([symbol, data]: [string, any]) => {
+                  const total = parseFloat(data.free || 0) + parseFloat(data.locked || 0);
+                  if (total === 0) return null; // Skip zero balances
+                  
+                  return (
+                    <div key={symbol} className="bg-slate-700/50 rounded-lg p-4 border-l-4 border-yellow-500">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-bold text-yellow-400 text-lg">{symbol}</span>
+                        <DollarSign className="w-4 h-4 text-yellow-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-xs text-slate-400">Available:</span>
+                          <span className="text-sm font-medium text-green-400">
+                            {parseFloat(data.free || 0).toFixed(6)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-slate-400">In Orders:</span>
+                          <span className="text-sm font-medium text-orange-400">
+                            {parseFloat(data.locked || 0).toFixed(6)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between border-t border-slate-600 pt-2">
+                          <span className="text-xs text-slate-400">Total:</span>
+                          <span className="text-sm font-bold text-white">
+                            {total.toFixed(6)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
@@ -97,13 +173,13 @@ export default function PortfolioPage() {
             <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-4 h-4 text-orange-400" />
-                <p className="text-sm text-slate-400">Drawdown</p>
+                <p className="text-sm text-slate-400">Available USDT</p>
               </div>
-              <p className="text-3xl font-bold text-orange-400">
-                {((portfolio?.risk?.drawdown || 0) * 100).toFixed(2)}%
+              <p className="text-3xl font-bold text-yellow-400">
+                ${balance?.USDT?.free ? parseFloat(balance.USDT.free).toFixed(2) : '0.00'}
               </p>
               <p className="text-xs text-slate-500 mt-1">
-                Peak: ${(portfolio?.risk?.peakEquity || 0).toFixed(2)}
+                Trading power
               </p>
             </div>
           </div>
@@ -156,7 +232,7 @@ export default function PortfolioPage() {
                       <div>
                         <p className="font-bold text-lg">{position.symbol}</p>
                         <p className="text-sm text-slate-400">
-                          {position.side} • {position.quantity.toFixed(6)} @ ${position.entryPrice.toFixed(2)}
+                          {position.side} • {position.quantity?.toFixed(6)} @ ${position.entryPrice?.toFixed(2)}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
                           Duration: {formatDuration(position.durationMinutes)}
@@ -182,11 +258,11 @@ export default function PortfolioPage() {
                     <div className="flex gap-4 text-xs">
                       <div className="flex-1 bg-red-500/10 rounded p-2 border border-red-500/30">
                         <p className="text-red-400 font-medium">Stop Loss</p>
-                        <p className="text-white font-mono">${position.stopLoss.toFixed(2)}</p>
+                        <p className="text-white font-mono">${position.stopLoss?.toFixed(2) || 'N/A'}</p>
                       </div>
                       <div className="flex-1 bg-green-500/10 rounded p-2 border border-green-500/30">
                         <p className="text-green-400 font-medium">Take Profit</p>
-                        <p className="text-white font-mono">${position.takeProfit.toFixed(2)}</p>
+                        <p className="text-white font-mono">${position.takeProfit?.toFixed(2) || 'N/A'}</p>
                       </div>
                     </div>
 

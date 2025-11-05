@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { marketApi, tradingApi, blockchainApi } from '@/lib/api'
-import { TrendingUp, TrendingDown, Activity, Database, Wallet, BarChart3, RefreshCw } from 'lucide-react'
+import { TrendingUp, TrendingDown, Activity, Database, Wallet, BarChart3, RefreshCw, DollarSign } from 'lucide-react'
 
 export default function Dashboard() {
   const [marketStatus, setMarketStatus] = useState<any>(null)
   const [systemStatus, setSystemStatus] = useState<any>(null)
   const [portfolio, setPortfolio] = useState<any>(null)
+  const [balance, setBalance] = useState<any>(null)
   const [tradeHistory, setTradeHistory] = useState<any[]>([])
   const [blockchainStatus, setBlockchainStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -22,17 +23,21 @@ export default function Dashboard() {
     try {
       setLoading(true)
 
-      const [market, port, history, blockchain] = await Promise.all([
+      const [market, port, history, blockchain, balanceData] = await Promise.all([
         marketApi.getStatus().catch(() => null),
         tradingApi.getPortfolio().catch(() => null),
         tradingApi.getHistory().catch(() => null),
         blockchainApi.getStatus().catch(() => null),
+        tradingApi.getBalance().catch(() => null),
       ])
 
       if (market?.success) setMarketStatus(market)
       if (port?.success) setPortfolio(port.portfolio)
       if (history?.success) setTradeHistory(history.history || [])
       if (blockchain?.success) setBlockchainStatus(blockchain)
+      if (balanceData?.success) setBalance(balanceData.balance)
+      
+      console.log('💰 Dashboard Balance:', balanceData)
     } finally {
       setLoading(false)
     }
@@ -42,7 +47,7 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4 animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-slate-400">Loading real-time data...</p>
         </div>
       </div>
@@ -77,8 +82,11 @@ export default function Dashboard() {
           <p className="text-2xl font-bold text-green-400">● Online</p>
         </div>
         <div className="web3-card p-4 glow-purple">
-          <p className="text-slate-400 text-sm mb-1">Active Signals</p>
-          <p className="text-2xl font-bold text-blue-400">{marketStatus?.activeSignals || 0}</p>
+          <p className="text-slate-400 text-sm mb-1">USDT Balance</p>
+          <p className="text-2xl font-bold text-yellow-400">
+            ${typeof balance?.USDT === 'number' ? balance.USDT.toFixed(2) : 
+              (balance?.USDT?.free ? parseFloat(balance.USDT.free).toFixed(2) : '0.00')}
+          </p>
         </div>
         <div className="web3-card p-4 glow-cyan">
           <p className="text-slate-400 text-sm mb-1">Open Positions</p>
@@ -91,6 +99,120 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* ✅ Fixed Wallet Balance Section */}
+      {balance && (
+        <div className="web3-card p-6 glow-yellow">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <Wallet className="w-6 h-6 text-yellow-400" />
+            Wallet Overview
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* USDT */}
+            <div className="bg-dark-lighter rounded-xl p-4 border border-yellow-400/20">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-lg font-bold text-yellow-400">USDT</p>
+                <DollarSign className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">Available:</span>
+                  <span className="font-bold text-green-400">
+                    {typeof balance.USDT === 'number' ? balance.USDT.toFixed(2) : 
+                     (balance.USDT?.free || '0.00')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">In Orders:</span>
+                  <span className="font-bold text-orange-400">
+                    {typeof balance.USDT === 'number' ? '0.00' : 
+                     (balance.USDT?.locked || '0.00')}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-600 pt-2">
+                  <span className="text-slate-400 text-sm">Total:</span>
+                  <span className="font-bold text-white">
+                    {typeof balance.USDT === 'number' ? balance.USDT.toFixed(2) : 
+                     ((parseFloat(balance.USDT?.free || 0) + parseFloat(balance.USDT?.locked || 0)).toFixed(2))}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* BTC */}
+            <div className="bg-dark-lighter rounded-xl p-4 border border-orange-400/20">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-lg font-bold text-orange-400">BTC</p>
+                <DollarSign className="w-5 h-5 text-orange-400" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">Available:</span>
+                  <span className="font-bold text-green-400">
+                    {typeof balance.BTC === 'number' ? balance.BTC.toFixed(6) : 
+                     (balance.BTC?.free || '0.000000')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">In Orders:</span>
+                  <span className="font-bold text-orange-400">
+                    {typeof balance.BTC === 'number' ? '0.000000' : 
+                     (balance.BTC?.locked || '0.000000')}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-600 pt-2">
+                  <span className="text-slate-400 text-sm">Total:</span>
+                  <span className="font-bold text-white">
+                    {typeof balance.BTC === 'number' ? balance.BTC.toFixed(6) : 
+                     ((parseFloat(balance.BTC?.free || 0) + parseFloat(balance.BTC?.locked || 0)).toFixed(6))}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ETH */}
+            <div className="bg-dark-lighter rounded-xl p-4 border border-blue-400/20">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-lg font-bold text-blue-400">ETH</p>
+                <DollarSign className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">Available:</span>
+                  <span className="font-bold text-green-400">
+                    {typeof balance.ETH === 'number' ? balance.ETH.toFixed(6) : 
+                     (balance.ETH?.free || '0.000000')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400 text-sm">In Orders:</span>
+                  <span className="font-bold text-orange-400">
+                    {typeof balance.ETH === 'number' ? '0.000000' : 
+                     (balance.ETH?.locked || '0.000000')}
+                  </span>
+                </div>
+                <div className="flex justify-between border-t border-slate-600 pt-2">
+                  <span className="text-slate-400 text-sm">Total:</span>
+                  <span className="font-bold text-white">
+                    {typeof balance.ETH === 'number' ? balance.ETH.toFixed(6) : 
+                     ((parseFloat(balance.ETH?.free || 0) + parseFloat(balance.ETH?.locked || 0)).toFixed(6))}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Total Value */}
+          <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-medium text-green-400">Total Portfolio Value</span>
+              <span className="text-2xl font-bold text-green-400">
+                ${typeof balance.total === 'number' ? balance.total.toFixed(2) : '0.00'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Market Data */}
       {marketStatus?.data && (
@@ -195,7 +317,7 @@ export default function Dashboard() {
                   <p className={`font-bold ${trade.side === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
                     {trade.side}
                   </p>
-                  <p className="text-xs text-slate-400">{trade.amount}</p>
+                  <p className="text-xs text-slate-400">${trade.amount?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
             ))}

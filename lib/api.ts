@@ -3,12 +3,12 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // Cache configuration
-const CACHE_DURATION = 30000; // 10 seconds
+const CACHE_DURATION = 60000;
 const cache = new Map<string, { data: any; timestamp: number }>();
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
-  timeout: 30000,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -152,12 +152,80 @@ export const tradingApi = {
     setCachedData("trading-stats", response.data);
     return response.data;
   },
+
+  // ✅ NEW AUTO TRADING METHODS
+  setAutoTrading: async (
+    enabled: boolean,
+    mode: "paper" | "live" = "paper"
+  ) => {
+    const response = await api.post("/trading/auto-trading", {
+      enabled,
+      mode,
+    });
+    return response.data;
+  },
+
+  getAutoTradingStatus: async () => {
+    const response = await api.get("/trading/auto-trading/status");
+    return response.data;
+  },
+
+  setTradingMode: async (mode: "paper" | "live") => {
+    const response = await api.post("/trading/mode", { mode });
+    return response.data;
+  },
+
+  updateTradingSettings: async (settings: {
+    minConfidence?: number;
+    maxPositions?: number;
+    positionSize?: number;
+    stopLoss?: number;
+    takeProfit?: number;
+  }) => {
+    const response = await api.post("/trading/settings", settings);
+    return response.data;
+  },
+
+  getTradingSettings: async () => {
+    const response = await api.get("/trading/settings");
+    return response.data;
+  },
+
+  // Manual trading methods
+  executeTrade: async (trade: {
+    symbol: string;
+    side: "buy" | "sell";
+    amount: number;
+    type?: "market" | "limit";
+    price?: number;
+  }) => {
+    const response = await api.post("/trading/execute", trade);
+    return response.data;
+  },
+
+  closePosition: async (symbol: string) => {
+    const response = await api.post("/trading/close-position", { symbol });
+    return response.data;
+  },
+
+  closeAllPositions: async () => {
+    const response = await api.post("/trading/close-all");
+    return response.data;
+  },
 };
 
 // ==================== ANALYSIS APIs ====================
 export const analysisApi = {
   trigger: async (coin: string) => {
     const response = await api.post("/analysis/trigger", { coin });
+    return response.data;
+  },
+};
+
+// ==================== AI CHAT APIs ====================
+export const aiChatApi = {
+  sendMessage: async (message: string) => {
+    const response = await api.post("/ai/chat", { message });
     return response.data;
   },
 };
